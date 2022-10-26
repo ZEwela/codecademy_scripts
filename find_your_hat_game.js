@@ -1,16 +1,16 @@
 const prompt = require('prompt-sync')({sigint: true});
 
-// kind of icons 
+// kinds of icons 
 const hat = '^';
 const hole = 'O';
 const fieldCharacter = '░';
 const pathCharacter = '*';
 
 class Field {
-  constructor (field) {
-    this._field = field;
-    this._Xposition = 0;
-    this._Yposition = 0;
+  constructor (rows, columns) {
+    this._field = Field.generateField(rows, columns);
+    this._Xposition = Field.startXPosition;
+    this._Yposition = Field.startYPosition;
 
   }
   print(){
@@ -55,59 +55,27 @@ class Field {
         arr[i] = [];
       }
     }
-  // inserting
+  // inserting fieldCharacters
     for (let i = 0; i< rows; i++) {
         for(let j = 0; j< columns; j++) {
             arr[i][j] = fieldCharacter;
         }
     }
 
-  const randomize = (number) => {
-    return Math.floor(Math.random() * number)
-  }
-
-pat = 1
-hats = 1
-hole = 4
-
-arr = []
-
-def asssign_icon(type)
-  x, y = randomize(5,5)
-  
-  if arr[x][y] != undefined
-    arr[x][y] = type 
-  else
-    assign_icon(type)
-  end 
-end 
-
-assingn_icon(pat)
+  // flatten array
+  let flatArray = [].concat(...arr);
 
 
 
-2x3
-
-coords_list = [0,0],[0,1],[1,0],[1,1],[2,0],[2,1]
-
-
-  // add 4 random holes
-// char = kind of icon element in a matrix
-// number = how many characters you want to make 
+  //  add icon characters to flatten array of fieldCharacters
+  // char = kind of icon element in a matrix
+  // number = how many characters you want to make 
+  let indexWatch = 0;
   const charMake = (char) => {
-          return if coords_list.empty?
-    // let CharToCheck = arr[randomize(rows)][randomize(columns)]
-      let ranomized_coords = ...[[2,4],[1,0]...]
-      x,y  = ranomized_coords.pop
-      arr[x, y] = char
-
-      // if (CharToCheck !== undefined) {
-      //   charToCheck = char;
-      // } else {
-      //   charMake(char, number)
-      // }
-
-const charsMake = (char, number) => {
+      flatArray[indexWatch] = char;
+      indexWatch += 1;
+  }
+  const charsMake = (char, number) => {
     for ( let i = number; i > 0; i-- ) {
       charMake(char)    
     }
@@ -116,40 +84,53 @@ const charsMake = (char, number) => {
   charsMake(hole, 5);
   charsMake(hat, 1);
   charsMake(pathCharacter, 1);
- 
-     const linearSearch = (arr, target) => {
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = 0; j < arr[i].length; j++) {
-                if (arr[i][j] == target) {
-                    return [i, j];
-                }
-            }
-        }
-        return [-1, -1];
-    }
 
-    let startChar =  linearSearch(arr, pathCharacter);
-    let hatChar = linearSearch(arr, hat);
-    console.log('aaaa', startChar, hatChar);
-    if (startChar === [-1, -1] ) {
-      let avoid = hatChar;
-      charMake()
-    }
-    return arr;
-  }
+
+// Shuffle Flatten Array
+const shuffle = (array) => {
+  return array.sort(() => Math.random() - 0.5);
 }
 
-
-console.log(Field.generateField(3,5));
-
-
-const myField = new Field([
-  ['*', '░', 'O'],
-  ['░', 'O', '░'],
-  ['░', '^', '░'],
-]);
+const shuffledFlattenArray = shuffle(flatArray);
 
 
+
+// Back to 2D Array  and set start point in constructor
+const chunk = (arr, rows) => {
+    let subArrayCount = arr.length / rows;
+    let result = [];
+    let xPosition = null;
+    let yPosition = 0;
+    for (let i = rows; i > 0; i--) {
+        let remove = subArrayCount;
+        let spliced = arr.splice(0, remove);
+
+// Look for start point, and set it in constructor
+        if (xPosition === null ) {
+          let xPositionCheck = spliced.findIndex(element => element === pathCharacter)
+          if (xPositionCheck !== -1) {
+            xPosition = xPositionCheck;
+            Field.setStartPosition(xPosition, yPosition);
+          }
+        }
+
+        result.push(spliced);
+        yPosition ++;
+    }
+    return result;
+}
+
+const twoDArray = chunk(shuffledFlattenArray, rows);
+
+return twoDArray;
+}
+static setStartPosition (x,y) {
+    Field.startXPosition = x;
+    Field.startYPosition = y; 
+}
+}
+
+const myField = new Field(5,5);
 myField.print();
 
 const move = () => {
@@ -159,6 +140,7 @@ const move = () => {
 }
 
 const newDirection = (direction) => {
+
   // array [0,0]
   if (direction === 'S') {
     myField.down();
@@ -169,7 +151,7 @@ const newDirection = (direction) => {
   } else if (direction === 'E') {
     myField.right();
   }
-  let position = myField.currentPosition(); 
+  let position = myField.currentPosition();
   if (position[0] === 3 || position[1] === 3 || position[0] === -1 || position[1] === -1 ) {
     console.log('Ouuups, you are out of the game field!')
     return process.exit();
@@ -181,7 +163,7 @@ const newDirection = (direction) => {
 
 process.stdout.write('Get to the hat (^), you start from (*). Be careful there are holes (O) of doom.\nNow, choose wisely:\nS = south,\nN = north,\nW = west,\nE = east\nWhich way? \n')
 
-
+console.log('aaaaa', myField.currentPosition());
 const checkMove = (data) => {
   let direction = data.toString().toUpperCase().trim();
   newDirection(direction)
